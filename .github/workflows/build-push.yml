@@ -1,46 +1,48 @@
-name: Build and Push to ACR
+name: build and push
 
 on:
-  workflow_dispatch:  # Isse tum manually GitHub se trigger kar sakte ho
+  workflow_dispatch: 
 
-permissions:
-  id-token: write
-  contents: read
-  
+permissions: 
+ contents: read
+ id-token: write
+
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+   runs-on: ubuntu-latest
+   env:
+      IMAGE_NAME: addtask
+      IMAGE_TAG: ${{ github.run_number }}
+      ACR_NAME: acr222
+      ACR_LOGIN_SERVER: acr222.azurecr.io
+   environment: qa
+   steps:
+   - name: Checkout
+     uses: actions/checkout@v7.0.0
+   - name: Azure Login
+     uses: Azure/login@v3
+     with:
+          client-id: 49f815ef-c5cb-4376-855a-c61b5bfb51a6
+          tenant-id: c9e1671a-0acd-4412-ba55-018fc27d1f62
+          subscription-id: 8fc57fc2-9cc4-4bcb-8c0f-315512d0cba3
+   - name: login to acr
+     run:  |
+       az acr login --name $ACR_NAME
+   - name: build docker image
+     run :  |
+       docker build -t $IMAGE_NAME:$IMAGE_TAG .
+   - name: image tag
+     run:  |
+       docker tag $IMAGE_NAME:$IMAGE_TAG ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
+   - name: image push
+     run: |
+       $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
+       
+  
+     
+    
+      
+    
+ 
+ 
 
-    env:
-      IMAGE_NAME: todo-add-tasks-api
-      IMAGE_TAG: v1
-      ACR_NAME: acrdev2212
-      ACR_LOGIN_SERVER: acrdev2212.azurecr.io
-
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Azure Login
-        uses: Azure/login@v2.3.0
-        with:
-          client-id: 05508e0f-295a-4dbc-a2e0-9f67896bcfbe
-          tenant-id: d2a66226-62e7-4862-a96b-deb4e548bd51
-          subscription-id: 86c2c7ab-0841-425a-9004-95c83c2075de
-
-      - name: Log in to ACR
-        run: |
-          az acr login --name $ACR_NAME
-
-      - name: Build Docker Image
-        run: |
-          docker build -t $IMAGE_NAME:$IMAGE_TAG .
-
-      - name: Tag Docker Image for ACR
-        run: |
-          docker tag $IMAGE_NAME:$IMAGE_TAG $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
-
-      - name: Push Docker Image to ACR
-        run: |
-          docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
