@@ -1,0 +1,5 @@
+image:
+  repository: acr222.azurecr.io/addtask
+  tag: 1
+
+replicaCount: 2
